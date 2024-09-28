@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Cart</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #fafafa;
+            color: #333;
+        }
+
+        /* Scrollable Header for Category Navigation */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #ff5722;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            overflow-x: auto;
+            white-space: nowrap;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .header a {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+            text-decoration: none;
+            padding: 10px 20px;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+
+        .header a:hover {
+            color: #ffccbc;
+        }
+
+        /* Main Content to be below the header */
+        .content {
+            margin-top: 80px;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #ff5722;
+            font-size: 2.5rem;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .cart-list {
+            margin: 20px 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .cart-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .cart-list li:hover {
+            background-color: #f5f5f5;
+        }
+
+        .remove-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .remove-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        /* Name Input */
+        .name-input {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .name-input label {
+            font-size: 1.2rem;
+            margin-right: 10px;
+        }
+
+        .name-input input {
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+        }
+
+        /* Cart Summary */
+        .cart-summary {
+            text-align: right;
+            margin-top: 20px;
+        }
+
+        .cart-summary h2 {
+            color: #333;
+        }
+
+        .cart-summary .total {
+            font-size: 1.5rem;
+            color: #ff5722;
+            font-weight: 600;
+        }
+
+        .checkout-btn {
+            background-color: #00bcd4;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .checkout-btn:hover {
+            background-color: #0097a7;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Scrollable Fixed Header for Category Navigation -->
+    <div class="header">
+        <a href="startpage.html">Home</a>
+        <a href="tacos.html">Tacos</a>
+        <a href="burritos.html">Burritos</a>
+        <a href="drinks.html">Drinks</a>
+        <a href="desserts.html">Desserts</a>
+        <a href="#">🌶 Appetizers</a>
+        <a href="#">🍕 Pizza</a>
+        <a href="#">🍝 Pasta</a>
+        <a href="#">🥗 Salads</a>
+        <a href="#">🍔 Burgers</a>
+        <a href="#">🍛 Rice Bowls</a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <h1>Your Cart</h1>
+        <ul class="cart-list" id="cart-list">
+            <!-- Cart items will be dynamically injected here -->
+        </ul>
+
+        <!-- Name Input Section -->
+        <div class="name-input">
+            <label for="customer-name">Enter Your Name:</label>
+            <input type="text" id="customer-name" placeholder="Your Name" required />
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="cart-summary">
+            <h2>Total Items: <span id="total-items">0</span></h2>
+            <h2>Total Price: $<span id="total-price">0.00</span></h2>
+            <button class="checkout-btn" onclick="checkout()">send order</button>
+        </div>
+    </div>
+
+    <script>
+        function groupCartItems(cart) {
+            const groupedItems = {};
+            
+            // Group items by name and count the quantities
+            cart.forEach(item => {
+                if (groupedItems[item.name]) {
+                    groupedItems[item.name].quantity += 1;
+                    groupedItems[item.name].totalPrice += item.price;
+                } else {
+                    groupedItems[item.name] = {
+                        price: item.price,
+                        quantity: 1,
+                        totalPrice: item.price
+                    };
+                }
+            });
+
+            return groupedItems;
+        }
+
+        function renderCart() {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartList = document.getElementById('cart-list');
+            const totalItems = document.getElementById('total-items');
+            const totalPrice = document.getElementById('total-price');
+
+            cartList.innerHTML = ''; // Clear the list before rendering
+            let total = 0;
+
+            // Group cart items
+            const groupedItems = groupCartItems(cart);
+
+            Object.keys(groupedItems).forEach((itemName, index) => {
+                const item = groupedItems[itemName];
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${itemName} x${item.quantity} - $${item.totalPrice.toFixed(2)}
+                    <button class="remove-btn" onclick="removeFromCart('${itemName}')">Remove</button>
+                `;
+                cartList.appendChild(li);
+                total += item.totalPrice;
+            });
+
+            totalItems.textContent = cart.length;
+            totalPrice.textContent = total.toFixed(2);
+        }
+
+        function removeFromCart(itemName) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            // Remove one instance of the item
+            const index = cart.findIndex(item => item.name === itemName);
+            if (index !== -1) {
+                cart.splice(index, 1);
+            }
+
+            localStorage.setItem('cart', JSON.stringify(cart)); // Update localStorage
+            renderCart(); // Re-render the cart
+        }
+
+        function checkout() {
+            const name = document.getElementById('customer-name').value.trim();
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            if (!name) {
+                alert("Please enter your name before proceeding.");
+                return;
+            }
+
+            if (cart.length === 0) {
+                alert("Your cart is empty. Add items to proceed.");
+            } else {
+                const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+                const newOrder = {
+                    name: name,
+                    details: cart,
+                    total: total
+                };
+
+                // Retrieve existing orders or initialize an empty array
+                const submittedOrders = JSON.parse(localStorage.getItem('submittedOrders')) || [];
+                submittedOrders.push(newOrder); // Add the new order
+                localStorage.setItem('submittedOrders', JSON.stringify(submittedOrders)); // Save to localStorage
+
+                // Redirect to the order confirmation page
+                alert(`Thank you, ${name}! Your order has been submitted.`);
+                localStorage.removeItem('cart'); // Clear the cart after submission
+                window.location.href = 'order-sent.html'; // Redirect to the order-sent page
+            }
+        }
+
+        // Initialize cart rendering when the page loads
+        window.onload = renderCart;
+    </script>
+
+</body>
+</html>
